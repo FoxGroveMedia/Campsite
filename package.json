@@ -8,6 +8,6 @@
   "packageManager": "npm@10.9.0",
   "workspaces": [
     "packages/create-campsite",
-    "packages/campsite-core"
+    "packages/basecamp"
   ]
 }

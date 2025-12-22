@@ -1,8 +1,8 @@
 {
-  "name": "campsite-core",
+  "name": "basecamp",
   "version": "0.0.1",
   "type": "module",
-  "description": "Core engine for Campsite static site generator.",
+  "description": "Basecamp engine for Campsite static site generator.",
   "bin": {
     "campsite": "./index.js"
   },

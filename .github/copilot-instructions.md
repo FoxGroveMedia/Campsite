@@ -26,7 +26,7 @@ TODO list (prioritize in this order):
 1. Set up the monorepo/package structure:
    - Root: campsite/ (the generator itself)
    - packages/create-campsite/ (the CLI that runs on `npm create`)
-   - packages/campsite-core/ (the actual build engine, reusable)
+   - packages/basecamp/ (the actual build engine, reusable)
 
 2. Implement the `create-campsite` CLI:
    - Use `create-` pattern with `prompts` or `inquirer` for user input
@@ -41,7 +41,7 @@ TODO list (prioritize in this order):
    - Optional: Vue/Alpine components
    - Simple campsite.config.js for customization
 
-4. Build the core engine (campsite-core):
+4. Build the core engine (basecamp):
    - CLI commands: dev, build, serve
    - File watcher for dev mode
    - Markdown processor (marked or markdown-it)
@@ -64,23 +64,23 @@ Start by generating the full file structure for the monorepo, then provide the c
 
 Make it clean, well-documented, and easy to extend. Use modern ESM syntax and TypeScript if possible (but keep it optional).
 
-- Monorepo layout: core engine in [packages/campsite-core](packages/campsite-core), scaffolder in [packages/create-campsite](packages/create-campsite), example consumer site in [campsite-site](campsite-site).
+- Monorepo layout: core engine in [packages/basecamp](packages/basecamp), scaffolder in [packages/create-campsite](packages/create-campsite), example consumer site in [campsite-site](campsite-site).
 - Tooling: Node 18+, npm workspaces at the root. Install workspace deps with `npm install` in the repo root; install the sample site separately in [campsite-site](campsite-site) before running its scripts.
 - Primary workflows (site): from [campsite-site](campsite-site) run `npm run dev` (watches `src/` and `public/`, rebuilds, then serves `dist`), `npm run build` (clean build), `npm run serve` (serve existing `dist`).
-- Core CLI commands (global or via npx): `campsite dev|build|serve` as implemented in [packages/campsite-core/index.js](packages/campsite-core/index.js).
-- Build pipeline: loads `campsite.config.js` merging defaults; wipes `outDir`, copies `public/`, walks `src/pages` (skips dotfiles), and processes each file via `renderPage()` in [packages/campsite-core/index.js](packages/campsite-core/index.js).
+- Core CLI commands (global or via npx): `campsite dev|build|serve` as implemented in [packages/basecamp/index.js](packages/basecamp/index.js).
+- Build pipeline: loads `campsite.config.js` merging defaults; wipes `outDir`, copies `public/`, walks `src/pages` (skips dotfiles), and processes each file via `renderPage()` in [packages/basecamp/index.js](packages/basecamp/index.js).
 - Markdown pages: `.md` files parsed with `gray-matter` + `markdown-it`; rendered HTML is optionally piped through a layout specified by `frontmatter.layout` (e.g., `layout: base.njk`) or emitted raw when no layout is set.
 - Nunjucks pages: `.njk` files render through the configured env (loader searches `src/layouts` then `src`); frontmatter is optional and merged into the template context.
 - Other page extensions: non-md/njk files in `src/pages` are copied verbatim to `dist`.
-- Template context: `pageContext()` exposes `{ site: { name, config }, page: {...frontmatter, content, source }, frontmatter, content }` for templates (see [packages/campsite-core/index.js](packages/campsite-core/index.js)).
-- Server: simple HTTP server with fallback to `index.html`, MIME map for common static assets, default port 4173 (see `serve()` in [packages/campsite-core/index.js](packages/campsite-core/index.js)).
-- Dev watch loop: `chokidar` watches `src/` and `public/`; rebuilds are serialized with a pending flag to avoid overlap (see `dev()` in [packages/campsite-core/index.js](packages/campsite-core/index.js)).
+- Template context: `pageContext()` exposes `{ site: { name, config }, page: {...frontmatter, content, source }, frontmatter, content }` for templates (see [packages/basecamp/index.js](packages/basecamp/index.js)).
+- Server: simple HTTP server with fallback to `index.html`, MIME map for common static assets, default port 4173 (see `serve()` in [packages/basecamp/index.js](packages/basecamp/index.js)).
+- Dev watch loop: `chokidar` watches `src/` and `public/`; rebuilds are serialized with a pending flag to avoid overlap (see `dev()` in [packages/basecamp/index.js](packages/basecamp/index.js)).
 - Config contract: [campsite-site/campsite.config.js](campsite-site/campsite.config.js) shows expected keys (`siteName`, `srcDir`, `outDir`, `templateEngine`, `markdown`, `integrations` with `nunjucks|liquid|vue|alpine` toggles).
 - Default layout: `src/pages/*.md` in the sample site use [campsite-site/src/layouts/base.njk](campsite-site/src/layouts/base.njk) with a `{% block content %}` override and hero stub.
 - Sample content: starter Markdown page in [campsite-site/src/pages/index.md](campsite-site/src/pages/index.md); global styles in [campsite-site/public/style.css](campsite-site/public/style.css).
 - Scaffolder (`npm create campsite@latest`): prompts for project name, Markdown support, template engines, package manager, and install flag; protects non-empty targets with a confirm prompt; renames `_gitignore` to `.gitignore`; copies template, swaps markdown vs. nunjucks starter page, prunes Vue/Alpine samples, writes config and dependencies accordingly (see [packages/create-campsite/index.js](packages/create-campsite/index.js)).
 - Scaffolder templates: base config in [packages/create-campsite/template/campsite.config.js](packages/create-campsite/template/campsite.config.js), layout + styles in [packages/create-campsite/template/src/layouts/base.njk](packages/create-campsite/template/src/layouts/base.njk) and [packages/create-campsite/template/public/style.css](packages/create-campsite/template/public/style.css), optional Vue/Alpine samples in [packages/create-campsite/template/src/components](packages/create-campsite/template/src/components), and an NJK variant homepage in [packages/create-campsite/template/variants/index.njk](packages/create-campsite/template/variants/index.njk).
-- Dependency injection: when scaffolding locally, `campsite-core` is linked via a file: path to the sibling package; otherwise falls back to a semver range.
+- Dependency injection: when scaffolding locally, `basecamp` is linked via a file: path to the sibling package; otherwise falls back to a semver range.
 - Hidden files: the walker skips entries starting with `.`; place generated artifacts elsewhere if they must ship.
-- Known gaps: tests and linting scripts are stubs; `renderPage()` currently calls `dirname()` without importing it, so expect a runtime error until `dirname` is added to the path imports in [packages/campsite-core/index.js](packages/campsite-core/index.js).
+- Known gaps: tests and linting scripts are stubs; `renderPage()` currently calls `dirname()` without importing it, so expect a runtime error until `dirname` is added to the path imports in [packages/basecamp/index.js](packages/basecamp/index.js).
 - Style/UX conventions: hero-forward landing page with gradient background and warm palette; reuse or extend [campsite-site/public/style.css](campsite-site/public/style.css) for consistent visuals.
