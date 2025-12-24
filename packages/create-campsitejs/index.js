@@ -74,8 +74,8 @@ async function writeConfig(targetDir, answers) {
   integrations: {
     nunjucks: ${answers.templateEngines.includes("nunjucks")},
     liquid: ${answers.templateEngines.includes("liquid")},
-    vue: ${answers.templateEngines.includes("vue")},
-    alpine: ${answers.templateEngines.includes("alpine")}
+    vue: ${answers.jsFrameworks.includes("vue")},
+    alpine: ${answers.jsFrameworks.includes("alpine")}
   }
 };
 `;
@@ -90,19 +90,60 @@ async function updatePackageJson(targetDir, answers) {
   pkg.devDependencies = pkg.devDependencies || {};
   const deps = pkg.dependencies;
   const devDeps = pkg.devDependencies;
+  pkg.scripts = pkg.scripts || {};
   const localCoreDir = resolve(__dirname, "../basecampjs");
   if (existsSync(localCoreDir)) {
     const relCore = relative(targetDir, localCoreDir) || ".";
-    deps["basecampjs"] = `file:${relCore}`;
+    devDeps["basecampjs"] = `file:${relCore}`;
   } else {
-    deps["basecampjs"] = "^0.0.1";
+    devDeps["basecampjs"] = "^0.0.1";
   }
-  if (answers.markdown) deps["markdown-it"] = "^14.1.0";
-  if (answers.templateEngines.includes("nunjucks")) deps["nunjucks"] = "^3.2.4";
-  if (answers.templateEngines.includes("liquid")) deps["liquidjs"] = "^10.12.0";
-  if (answers.templateEngines.includes("vue")) deps["vue"] = "^3.4.0";
-  if (answers.templateEngines.includes("alpine")) deps["alpinejs"] = "^3.13.0";
-  devDeps["tailwindcss"] = "^3.4.13";
+  if (answers.markdown) devDeps["markdown-it"] = "^14.1.0";
+  if (answers.templateEngines.includes("nunjucks")) devDeps["nunjucks"] = "^3.2.4";
+  if (answers.templateEngines.includes("liquid")) devDeps["liquidjs"] = "^10.12.0";
+  if (answers.jsFrameworks.includes("vue")) deps["vue"] = "^3.4.0";
+  if (answers.jsFrameworks.includes("alpine")) deps["alpinejs"] = "^3.13.0";
+
+  // CSS framework selection
+  const cssFramework = answers.cssFramework || "tailwind";
+  const cssDeps = {
+    bootstrap: ["bootstrap", "^5.3.3"],
+    foundation: ["foundation-sites", "^6.8.1"],
+    bulma: ["bulma", "^0.9.4"]
+  };
+
+  // Reset CSS-related scripts before applying framework-specific ones
+  ["build:css", "dev:css", "dev:site", "prebuild", "postinstall"].forEach((script) => {
+    delete pkg.scripts[script];
+  });
+
+  if (cssFramework === "tailwind") {
+    devDeps["tailwindcss"] = "^3.4.13";
+    devDeps["npm-run-all"] = "^4.1.5";
+    pkg.scripts["build:css"] = "tailwindcss -c tailwind.config.cjs -i ./src/styles/tailwind.css -o ./public/style.css --minify";
+    pkg.scripts["dev:css"] = "tailwindcss -c tailwind.config.cjs -i ./src/styles/tailwind.css -o ./public/style.css --watch";
+    pkg.scripts["dev:site"] = "campsite dev";
+    pkg.scripts["dev"] = "npm-run-all -p dev:css dev:site";
+    pkg.scripts["prebuild"] = "npm run build:css";
+    pkg.scripts["build"] = "campsite build";
+    pkg.scripts["serve"] = "campsite serve";
+    pkg.scripts["postinstall"] = "npm run build:css";
+  } else {
+    delete devDeps["tailwindcss"];
+    delete devDeps["npm-run-all"];
+    Object.entries(cssDeps).forEach(([key, [name]]) => {
+      if (key !== cssFramework) delete deps[name];
+    });
+    const selected = cssDeps[cssFramework];
+    if (selected) {
+      const [name, version] = selected;
+      deps[name] = version;
+    }
+    pkg.scripts["dev"] = "campsite dev";
+    pkg.scripts["build"] = "campsite build";
+    pkg.scripts["serve"] = "campsite serve";
+  }
+
   await writeFile(pkgPath, JSON.stringify(pkg, null, 2), "utf8");
 }
 
@@ -119,12 +160,21 @@ async function swapPageTemplates(targetDir, answers) {
 
 async function pruneComponents(targetDir, answers) {
   const componentDir = join(targetDir, "src", "components");
-  if (!answers.templateEngines.includes("vue")) {
+  if (!answers.jsFrameworks.includes("vue")) {
     await rm(join(componentDir, "HelloCampsite.vue")).catch(() => {});
   }
-  if (!answers.templateEngines.includes("alpine")) {
+  if (!answers.jsFrameworks.includes("alpine")) {
     await rm(join(componentDir, "alpine-card.html")).catch(() => {});
   }
+}
+
+async function pruneCssFramework(targetDir, answers) {
+  if (answers.cssFramework === "tailwind") return;
+  const tailwindFiles = [
+    join(targetDir, "tailwind.config.cjs"),
+    join(targetDir, "src", "styles", "tailwind.css")
+  ];
+  await Promise.all(tailwindFiles.map((file) => rm(file).catch(() => {})));
 }
 
 async function installDependencies(targetDir, packageManager) {
@@ -142,8 +192,8 @@ async function installDependencies(targetDir, packageManager) {
 }
 
 async function main() {
-  console.log(kleur.bold().cyan("\n🏕️ Welcome to Campsite"));
-  console.log(kleur.dim("Scaffold a cozy static site in seconds.\n"));
+  console.log(kleur.bold().cyan("\n🏕️  Welcome to CampSiteJS"));
+  console.log(kleur.dim("Build a cozy static campsite in seconds.\n"));
 
   const argProjectName = process.argv[2];
   const defaultProjectName = argProjectName || nextCampsiteName(process.cwd());
@@ -165,15 +215,37 @@ async function main() {
     {
       type: "multiselect",
       name: "templateEngines",
-      message: "Choose templating and UI options",
+      message: "Choose templating engines",
       hint: "Use space to toggle, enter to confirm",
       instructions: false,
       min: 1,
       choices: [
         { title: "Nunjucks", value: "nunjucks", selected: true },
-        { title: "Liquid", value: "liquid", selected: true },
-        { title: "Vue components", value: "vue" },
-        { title: "AlpineJS sprinkles", value: "alpine" }
+        { title: "Liquid", value: "liquid" }
+      ]
+    },
+    {
+      type: "multiselect",
+      name: "jsFrameworks",
+      message: "Sprinkle in JS frameworks?",
+      hint: "Use space to toggle, enter to confirm",
+      instructions: false,
+      min: 0,
+      choices: [
+        { title: "Alpine.js", value: "alpine", selected: true },
+        { title: "Vue.js", value: "vue" }
+      ]
+    },
+    {
+      type: "select",
+      name: "cssFramework",
+      message: "CSS framework",
+      initial: 0,
+      choices: [
+        { title: "Tailwind CSS", value: "tailwind" },
+        { title: "Bootstrap", value: "bootstrap" },
+        { title: "Foundation", value: "foundation" },
+        { title: "Bulma", value: "bulma" }
       ]
     },
     {
@@ -208,6 +280,7 @@ async function main() {
   await copyBaseTemplate(targetDir);
   await swapPageTemplates(targetDir, answers);
   await pruneComponents(targetDir, answers);
+  await pruneCssFramework(targetDir, answers);
   await writeConfig(targetDir, answers);
   await updatePackageJson(targetDir, answers);
 
