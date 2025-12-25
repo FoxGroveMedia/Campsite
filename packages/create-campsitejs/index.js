@@ -11,6 +11,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const templateDir = join(__dirname, "template");
 // Variant pages live under the template folder
 const variantDir = join(templateDir, "variants");
+const pkgJsonPath = join(__dirname, "package.json");
+
+async function getCliVersion() {
+  try {
+    const raw = await readFile(pkgJsonPath, "utf8");
+    const pkg = JSON.parse(raw);
+    return pkg.version || "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
 
 function formatPackageName(name) {
   return name
@@ -71,6 +82,8 @@ async function writeConfig(targetDir, answers) {
   outDir: "dist",
   templateEngine: "${primaryEngine}",
   markdown: ${answers.markdown},
+  minifyCSS: false,
+  minifyHTML: false,
   integrations: {
     nunjucks: ${answers.templateEngines.includes("nunjucks")},
     liquid: ${answers.templateEngines.includes("liquid")},
@@ -192,7 +205,8 @@ async function installDependencies(targetDir, packageManager) {
 }
 
 async function main() {
-  console.log(kleur.bold().cyan("\n🏕️  Welcome to CampSiteJS"));
+  const version = await getCliVersion();
+  console.log(kleur.bold().cyan(`\n🏕️  Welcome to CampSiteJS v${version}`));
   console.log(kleur.dim("Build a cozy static campsite in seconds.\n"));
 
   const argProjectName = process.argv[2];

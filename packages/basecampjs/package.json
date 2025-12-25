@@ -1,6 +1,6 @@
 {
   "name": "basecampjs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "description": "BasecampJS engine for Campsite static site generator.",
   "bin": {
@@ -11,6 +11,8 @@
     ".": "./index.js"
   },
   "dependencies": {
+    "csso": "^5.0.5",
+    "html-minifier-terser": "^7.2.0",
     "chokidar": "^3.6.0",
     "gray-matter": "^4.0.3",
     "kolorist": "^1.8.0",

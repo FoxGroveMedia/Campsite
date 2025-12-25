@@ -4,6 +4,8 @@ export default {
   outDir: "dist",
   templateEngine: "nunjucks",
   markdown: true,
+  minifyCSS: false,
+  minifyHTML: false,
   integrations: {
     nunjucks: true,
     liquid: false,

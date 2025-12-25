@@ -11,6 +11,8 @@ import matter from "gray-matter";
 import MarkdownIt from "markdown-it";
 import nunjucks from "nunjucks";
 import { Liquid } from "liquidjs";
+import { minify as minifyCss } from "csso";
+import { minify as minifyHtml } from "html-minifier-terser";
 
 const cwd = process.cwd();
 const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
@@ -21,6 +23,8 @@ const defaultConfig = {
   outDir: "dist",
   templateEngine: "nunjucks",
   markdown: true,
+  minifyCSS: false,
+  minifyHTML: false,
   integrations: { nunjucks: true, liquid: false, vue: false, alpine: false }
 };
 
@@ -67,6 +71,45 @@ async function copyPublic(publicDir, outDir) {
   if (existsSync(publicDir)) {
     await cp(publicDir, outDir, { recursive: true });
   }
+}
+
+async function minifyCSSFiles(outDir) {
+  const files = await walkFiles(outDir);
+  const cssFiles = files.filter((file) => extname(file).toLowerCase() === ".css");
+
+  await Promise.all(cssFiles.map(async (file) => {
+    try {
+      const css = await readFile(file, "utf8");
+      const { css: minified } = minifyCss(css);
+      await writeFile(file, minified, "utf8");
+    } catch (err) {
+      console.error(kolor.red(`Failed to minify CSS ${relative(outDir, file)}: ${err.message}`));
+    }
+  }));
+}
+
+async function minifyHTMLFiles(outDir, config) {
+  const files = await walkFiles(outDir);
+  const htmlFiles = files.filter((file) => extname(file).toLowerCase() === ".html");
+
+  await Promise.all(htmlFiles.map(async (file) => {
+    try {
+      const html = await readFile(file, "utf8");
+      const minified = await minifyHtml(html, {
+        collapseWhitespace: true,
+        removeComments: true,
+        minifyCSS: !!config.minifyCSS,
+        minifyJS: true,
+        keepClosingSlash: true,
+        removeRedundantAttributes: true,
+        removeScriptTypeAttributes: true,
+        removeStyleLinkTypeAttributes: true
+      });
+      await writeFile(file, minified, "utf8");
+    } catch (err) {
+      console.error(kolor.red(`Failed to minify HTML ${relative(outDir, file)}: ${err.message}`));
+    }
+  }));
 }
 
 async function walkFiles(dir) {
@@ -232,6 +275,16 @@ async function build(cwdArg = cwd) {
   }
 
   await Promise.all(files.map((file) => renderPage(file, { pagesDir, layoutsDir, outDir, env, liquidEnv, config, data })));
+
+  if (config.minifyCSS) {
+    await minifyCSSFiles(outDir);
+    console.log(kolor.green("CSS minified"));
+  }
+
+  if (config.minifyHTML) {
+    await minifyHTMLFiles(outDir, config);
+    console.log(kolor.green("HTML minified"));
+  }
 
   console.log(kolor.green(`Built ${files.length} page(s) → ${relative(cwdArg, outDir)}`));
 }
