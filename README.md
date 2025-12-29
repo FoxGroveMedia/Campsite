@@ -1,24 +1,39 @@
-# ⛺ Campsite - A Cozy Static Site Generator
-Welcome to Campsite, the static site generator that feels like a weekend in the woods. Pack light, pitch fast, and ship sites with a cozy developer experience.
+[![npm](https://img.shields.io/npm/v/campsitejs.svg)](https://www.npmjs.com/package/campsitejs) [![Download](https://img.shields.io/npm/dm/campsitejs)](https://www.npmjs.com/package/campsitejs)
+
+# ⛺ CampsiteJS - A Cozy Static Site Generator
+Welcome to CampsiteJS, the static site generator that feels like a weekend in the woods. Pack light, pitch fast, and ship sites with a cozy developer experience.
 
 ## 🗺️ Trail Map
-- packages/campsitejs — scaffolder invoked via `npm create campsitejs@latest` (or `npx campsitejs@latest`)
 - packages/basecampjs — the build/dev/serve engine
+- packages/campsitejs — scaffolder invoked via `npm create campsitejs@latest` (or `npx campsitejs@latest`)
 
 ## 🏕️ Why Camp With Us?
 - Quick setup: new sites in a few prompts
 - Flexible templating: Markdown, Nunjucks, Liquid, optional Vue/Alpine sprinkles
 - Friendly defaults: warm colors, simple layouts, and Tailwind-ready styles
-- Batteries included: dev server, file watcher, and static output to `campsite/`
+- Batteries included: dev server, file watcher, and static output to `campsite/`, or choose your own build directory
+
+![CampsiteJS screenshot](https://cdn.foxgrove.media/csjs/screenshot.jpg)
 
 ## 🚀 Fast Start (New Site)
 ```
 npm create campsitejs@latest my-campsite-name
+```
+- Choose your site name when prompted
+- Select to include Markdown + Frontmatter support (yes/no)
+- Choose if you want to enable image optimization, coming soon! (yes/no)
+- Choose your template languages (Nunjucks/Liquid/Vue/Alpine)
+- Choose to include JS framework support (Vue/Alpine/None)
+- Choose to include CSS framework support (Tailwind/Bootstrap/Foundation/Bulma/None)
+- Choose your package manager (npm/yarn/pnpm/bun)
+- Then choose to install dependencies right away (yes/no)
+
+Then navigate to your new campsite folder:
+```
 cd my-campsite-name
 npm install
 npm run dev
 ```
-- Choose your template engines when prompted (Markdown/Nunjucks/Liquid/Vue/Alpine)
 - Swap `_gitignore` to `.gitignore` is handled automatically by the scaffolder
 
 ## 🛠️ Working in This Repo
@@ -29,9 +44,11 @@ npm install
 npm run dev
 ```
 - Runs the sample site using the local basecampjs build
-- Scripts: `npm run build` (clean build), `npm run serve` (serve existing `campsite/`)
+- Scripts: `npm run build` (clean production ready build), `npm run serve` (serve existing `campsite/`)
+- HTML/CSS minification, you can enable it in `campsite.config.js`
+- Image optimization coming soon!
 
-## 🚦 Campsite Commands
+## 🚦 CampsiteJS Commands
 - `npx campsite dev` — watch `src/` and `public/`, rebuild, and serve `campsite/`
 - `npx campsite build` — clean build to `campsite/`
 - `npx campsite serve` — serve an existing `campsite/`
@@ -46,6 +63,8 @@ npm run dev
 - Pages: Markdown with frontmatter or `.njk` templates; other files copy through
 - Layouts: Nunjucks defaults with a base layout and content block
 - Dev loop: file watcher rebuilds on change; output served from `campsite/`
+- Partials: reusable snippets in `src/partials/`
+- Static assets: copy `public/` to `campsite/` on build
 
 ## 🤝 Contributing
 Pull up a camp chair and open a PR. Keep it cozy, documented, and easy to extend. Tests and linting are coming soon.
