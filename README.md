@@ -1,4 +1,4 @@
-[![npm CampsiteJS](https://img.shields.io/npm/v/campsitejs.svg)](https://www.npmjs.com/package/campsitejs) [![npm BasecampJS](https://img.shields.io/npm/v/basecampjs.svg)](https://www.npmjs.com/package/basecampjs) [![Download](https://img.shields.io/npm/dm/campsitejs)](https://www.npmjs.com/package/campsitejs)
+## CampsiteJS: [![npm CampsiteJS](https://img.shields.io/npm/v/campsitejs.svg)](https://www.npmjs.com/package/campsitejs) [![Download](https://img.shields.io/npm/dm/campsitejs)](https://www.npmjs.com/package/campsitejs) | BasecampJS: [![npm BasecampJS](https://img.shields.io/npm/v/basecampjs.svg)](https://www.npmjs.com/package/basecampjs) [![Download](https://img.shields.io/npm/dm/basecampjs)](https://www.npmjs.com/package/basecampjs)
 
 # ⛺ CampsiteJS - A Cozy Static Site Generator
 Welcome to CampsiteJS, the static site generator that feels like a weekend in the woods. Pack light, pitch fast, and ship sites with a cozy developer experience.
