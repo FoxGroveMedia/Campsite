@@ -268,7 +268,23 @@ async function build(cwdArg = cwd) {
   const publicDir = resolve(cwdArg, "public");
   const outDir = resolve(cwdArg, config.outDir || "dist");
   const env = createNunjucksEnv(layoutsDir, pagesDir, srcDir, partialsDir);
+  // Allow user config to extend the Nunjucks environment (e.g., custom filters)
+  if (config?.hooks?.nunjucksEnv && typeof config.hooks.nunjucksEnv === "function") {
+    try {
+      config.hooks.nunjucksEnv(env);
+    } catch (err) {
+      console.error(kolor.red(`Failed to apply nunjucksEnv hook: ${err.message}`));
+    }
+  }
   const liquidEnv = createLiquidEnv(layoutsDir, pagesDir, srcDir, partialsDir);
+  // Allow user config to extend the Liquid environment (e.g., custom filters)
+  if (config?.hooks?.liquidEnv && typeof config.hooks.liquidEnv === "function") {
+    try {
+      config.hooks.liquidEnv(liquidEnv);
+    } catch (err) {
+      console.error(kolor.red(`Failed to apply liquidEnv hook: ${err.message}`));
+    }
+  }
   const data = await loadData(dataDir);
 
   await cleanDir(outDir);
