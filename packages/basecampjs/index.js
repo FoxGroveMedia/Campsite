@@ -48,18 +48,23 @@ async function ensureDir(dir) {
   await mkdir(dir, { recursive: true });
 }
 
-async function loadData(dataDir) {
+async function loadData(dataDirs) {
   const collections = {};
-  if (!existsSync(dataDir)) return collections;
-  const files = await walkFiles(dataDir);
-  for (const file of files) {
-    if (extname(file).toLowerCase() !== ".json") continue;
-    const name = basename(file, ".json");
-    try {
-      const raw = await readFile(file, "utf8");
-      collections[name] = JSON.parse(raw);
-    } catch (err) {
-      console.error(kolor.red(`Failed to load data ${relative(dataDir, file)}: ${err.message}`));
+  // Support both string and array input
+  const dirs = Array.isArray(dataDirs) ? dataDirs : [dataDirs];
+  
+  for (const dataDir of dirs) {
+    if (!existsSync(dataDir)) continue;
+    const files = await walkFiles(dataDir);
+    for (const file of files) {
+      if (extname(file).toLowerCase() !== ".json") continue;
+      const name = basename(file, ".json");
+      try {
+        const raw = await readFile(file, "utf8");
+        collections[name] = JSON.parse(raw);
+      } catch (err) {
+        console.error(kolor.red(`Failed to load data ${relative(dataDir, file)}: ${err.message}`));
+      }
     }
   }
   return collections;
@@ -371,6 +376,7 @@ async function build(cwdArg = cwd) {
   const layoutsDir = join(srcDir, "layouts");
   const partialsDir = join(srcDir, "partials");
   const dataDir = join(srcDir, "data");
+  const collectionsDir = join(srcDir, "collections");
   const publicDir = resolve(cwdArg, "public");
   const outDir = resolve(cwdArg, config.outDir || "dist");
   const env = createNunjucksEnv(layoutsDir, pagesDir, srcDir, partialsDir);
@@ -391,7 +397,7 @@ async function build(cwdArg = cwd) {
       console.error(kolor.red(`Failed to apply liquidEnv hook: ${err.message}`));
     }
   }
-  const data = await loadData(dataDir);
+  const data = await loadData([dataDir, collectionsDir]);
 
   await cleanDir(outDir);
   await copyPublic(publicDir, outDir);
@@ -514,9 +520,10 @@ async function dev(cwdArg = cwd) {
   const config = await loadConfig(cwdArg);
   const srcDir = resolve(cwdArg, config.srcDir || "src");
   const dataDir = join(srcDir, "data");
+  const collectionsDir = join(srcDir, "collections");
   const publicDir = resolve(cwdArg, "public");
   const outDir = resolve(cwdArg, config.outDir || "dist");
-  const watcher = chokidar.watch([srcDir, publicDir, dataDir], { ignoreInitial: true });
+  const watcher = chokidar.watch([srcDir, publicDir, dataDir, collectionsDir], { ignoreInitial: true });
 
   watcher.on("all", (event, path) => {
     console.log(kolor.cyan(`↻ ${event}: ${relative(cwdArg, path)}`));
