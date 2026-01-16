@@ -1,5 +1,5 @@
 <nav class="flex items-center gap-2">
-  {% set nav_items = navbar or data.navbar or [] %}
+  {% set nav_items = navbar or collections.navbar or [] %}
   {% for item in nav_items %}
   <a href="{{ item.url or '#' }}" {% if item.target %}target="{{ item.target }}" {% endif %} {% if item.rel
     %}rel="{{ item.rel }}" {% endif %}
